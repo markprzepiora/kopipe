@@ -3,21 +3,29 @@ kopipe
 
 Kopipe (コピペ), pronounced as in (CopyPa)ste.
 
-Dead simple ActiveRecord object copying for ActiveRecord >= 3.2 and Ruby 2.0.
+Dead simple ActiveRecord object copying for ActiveRecord >= 3.2 and Ruby 2.0*.
 
 Kopipe is in version 0.0.1.alpha, so neither expect this README to be accurate nor for the interface not to change.
+
+\* Ruby 1.9 support through the ```ruby-1.9``` branch.
 
 
 Setup
 -----
 
-Add it to your Gemfile,
+Add it to your Gemfile either with,
 
 ```ruby
 gem 'kopipe', github: 'markprzepiora/kopipe'
 ```
 
-and ```bundle install```.
+Or if you are still running Ruby 1.9,
+
+```ruby
+gem 'kopipe', github: 'markprzepiora/kopipe', branch: 'ruby-1.9'
+```
+
+and run ```bundle install```.
 
 
 Shallow copies (grasshopper mode)
@@ -48,6 +56,8 @@ In your code,
 todo      = Todo.find(1)
 todo_copy = TodoCopier.new(todo).copy!
 ```
+
+The student 
 
 
 Deep copies
@@ -121,5 +131,3 @@ module TodoCopiers
   end
 end
 ```
-
-_(Author's note: in Rails 4 this works out of the box. In Rails 3, this requires a workaround. Stay tuned!)_
