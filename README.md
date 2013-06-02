@@ -80,6 +80,8 @@ class TodoCopier < Kopipe::Copier
 end
 ```
 
+Copy it with one fell swoop.
+
 ```ruby
 project      = Project.find(1)
 project_copy = ProjectCopier.new(project).copy!
