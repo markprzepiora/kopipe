@@ -20,7 +20,7 @@ gem 'kopipe', github: 'markprzepiora/kopipe'
 Or if you are still running Ruby 1.9,
 
 ```ruby
-gem 'kopipe', github: 'markprzepiora/kopipe', branch: 'ruby-1.9'
+gem 'kopipe', github: 'markprzepiora/kopipe', branch: 'ruby1.9'
 ```
 
 and run ```bundle install```.
