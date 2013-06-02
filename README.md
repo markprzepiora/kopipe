@@ -3,11 +3,9 @@ kopipe
 
 Kopipe (コピペ), pronounced as in (CopyPa)ste.
 
-Dead simple ActiveRecord object copying for ActiveRecord >= 3.2 and Ruby 2.0*.
+Dead simple ActiveRecord object copying for ActiveRecord 3.2+.
 
 Kopipe is in version 0.0.1.alpha, so neither expect this README to be accurate nor for the interface not to change.
-
-\* Ruby 1.9 support through the ```ruby-1.9``` branch.
 
 
 Setup
