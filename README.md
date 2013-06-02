@@ -5,6 +5,9 @@ Kopipe (コピペ), pronounced as in (CopyPa)ste.
 
 Dead simple ActiveRecord object copying for ActiveRecord >= 3.2 and Ruby 2.0.
 
+Kopipe is in version 0.0.1.alpha, so neither expect this README to be accurate nor for the interface not to change.
+
+
 Setup
 -----
 
@@ -76,7 +79,7 @@ class TodoCopier < Kopipe::Copier
   copies_belongs_to :author,  :deep => false
 
   # Kopipe is smart enough not to endlessly copy projects and todos.
-  copies_belongs_to :project, :deep => 'TodoCopier'
+  copies_belongs_to :project, :deep => 'ProjectCopier'
 end
 ```
 
@@ -88,3 +91,35 @@ project_copy = ProjectCopier.new(project).copy!
 ```
 
 "Whoa."
+
+
+But that's not all
+------------------
+
+### Single-table inheritance #########
+
+"Sensei, I have many todos, but while some are a ```Todo```, others are a ```Bug < Todo```, or a ```Feature < Todo```."
+
+Worry not, I will not judge you.
+
+```ruby
+class ProjectCopier < Kopipe::Copier
+  copies_has_many :todos, :polymorphic => true, :namespace => 'TodoCopiers'
+end
+
+module TodoCopiers
+  class TodoCopier < Kopipe::Copier
+    copies_attributes :name, :completed
+  end
+  
+  class BugCopier < TodoCopier
+    copies_belongs_to :reported_by,  :deep => false
+  end
+  
+  class FeatureCopier < TodoCopier
+    copies_belongs_to :suggested_by, :deep => false
+  end
+end
+```
+
+_(Author's note: in Rails 4 this works out of the box. In Rails 3, this requires a workaround. Stay tuned!)_
