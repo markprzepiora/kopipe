@@ -20,10 +20,10 @@ module Kopipe
     include FieldCopiers::BelongsTo
     include FieldCopiers::HasAndBelongsToMany
 
-    def initialize(source, target: nil, db: CopierDatabase.new)
-      @db     = db
+    def initialize(source, options = {})
+      @db     = options[:db] || CopierDatabase.new
       @source = source
-      @target = target
+      @target = options[:target]
       @target ||= yield if block_given?
       @target ||= source.class.new
 
@@ -43,8 +43,12 @@ module Kopipe
 
     private
 
-    def deep_copy(source, copier_class: nil, polymorphic: false, namespace: nil, &block)
+    def deep_copy(source, options = {}, &block)
       return nil if source.nil?
+
+      copier_class = options[:copier_class]
+      polymorphic  = options[:polymorphic]
+      namespace    = options[:namespace]
 
       if polymorphic
         copier_class = get_polymorphic_copier_class(source, namespace)
@@ -83,9 +87,9 @@ module Kopipe
   end
 
   class IdentityCopier < Copier
-    def initialize(source, **options)
-      options.delete :target
-      super(source, target: source, **options)
+    def initialize(source, options = {})
+      options[:target] = source
+      super(source, options)
     end
 
     def copy!
