@@ -17,8 +17,8 @@ gem 'kopipe', github: 'markprzepiora/kopipe'
 and ```bundle install```.
 
 
-Shallow copies (easy mode)
---------------------------
+Shallow copies (grasshopper mode)
+---------------------------------
 
 "Sensei, I can use [```ActiveRecord::Base#dup```](http://apidock.com/rails/ActiveRecord/Base/dup)!"
 
@@ -42,10 +42,9 @@ end
 In your code,
 
 ```ruby
-todo_copy = TodoCopier.new(Todo.find(123)).copy!
+todo      = Todo.find(1)
+todo_copy = TodoCopier.new(todo).copy!
 ```
-
-EZ.
 
 
 Deep copies
@@ -76,7 +75,14 @@ class TodoCopier < Kopipe::Copier
   copies_attributes :name, :completed
   copies_belongs_to :author,  :deep => false
 
-  # Kopipe is smart enough not to 
+  # Kopipe is smart enough not to endlessly copy projects and todos.
   copies_belongs_to :project, :deep => 'TodoCopier'
 end
 ```
+
+```ruby
+project      = Project.find(1)
+project_copy = ProjectCopier.new(project).copy!
+```
+
+"Whoa."
