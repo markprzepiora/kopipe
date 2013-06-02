@@ -34,10 +34,12 @@ end
 module Kopipe
   describe Copier do
     describe "#initialize" do
-      it "instantites a new source.class as the target by default" do
+      before do
         stub_const "Person", Struct.new(:name)
         stub_const "PersonCopier", Class.new(Copier)
+      end
 
+      it "instantites a new source.class as the target by default" do
         source = Person.new("Mark")
         target = PersonCopier.new(source).target
         target.class.should == Person
@@ -45,81 +47,74 @@ module Kopipe
       end
 
       it "accepts an optional target parameter which is set as the copy target" do
-        stub_const "Person", Struct.new(:name)
-        stub_const "PersonCopier", Class.new(Copier)
-
         target = stub
 
         PersonCopier.new(stub, target: target).target.should equal target
       end
 
       it "alternatively accepts a block which yields the target" do
-        stub_const "Person", Struct.new(:name)
-        stub_const "PersonCopier", Class.new(Copier)
-
         target = stub('target')
 
         PersonCopier.new(stub('source')){ target }.target.should == target
       end
     end
 
-    it "can define custom copiers" do
-      stub_const "Person", Struct.new(:name, :age)
-      stub_const "PersonCopier", (Class.new(Copier) do
-        copies { target.name = "Richard" }
-        copies { target.age  = 28 }
-      end)
+    describe ".copies" do
+      it "defines a custom copier which runs a block" do
+        stub_const "Person", Struct.new(:name, :age)
+        stub_const "PersonCopier", (Class.new(Copier) do
+          copies { target.name = "Richard" }
+          copies { target.age  = 28 }
+        end)
 
-      mark_clone = PersonCopier.new(Person.new("Mark", 27)).copy!
-      mark_clone.to_a.should == ["Richard", 28]
+        mark_clone = PersonCopier.new(Person.new("Mark", 27)).copy!
+        mark_clone.to_a.should == ["Richard", 28]
+      end
     end
 
-    it "saves the target object in order with the .and_saves method" do
-      stub_const "Person", Struct.new(:name, :age)
-      stub_const "PersonCopier", (Class.new(Copier) do
-        copies {
-          target.name = "Richard"
-        }
-        and_saves
-        copies {
-          target.age  = 28
-        }
-      end)
+    describe ".and_saves" do
+      it "saves the target object at a specific time" do
+        stub_const "Person", Struct.new(:name, :age)
+        stub_const "PersonCopier", (Class.new(Copier) do
+          copies { target.name = "Richard" }
+          and_saves
+          copies { target.age  = 28 }
+        end)
 
-      mark_clone = Person.new
-      mark_clone.should_receive(:save!) {
-        mark_clone.to_a.should == ["Richard", nil]
-      }
-      PersonCopier.new(Person.new("Mark", 27), target: mark_clone).copy!
+        mark_clone = Person.new
+        mark_clone.should_receive(:save!) {
+          mark_clone.to_a.should == ["Richard", nil]
+        }
+        PersonCopier.new(Person.new("Mark", 27), target: mark_clone).copy!
+      end
     end
 
-    it "copies scalar attributes" do
-      stub_const "Person", Struct.new(:name, :age)
-      stub_const "PersonCopier", (Class.new(Copier) do
-        copies_attributes :name, :age
-      end)
+    describe ".copies_attributes" do
+      it "copies scalar attributes" do
+        stub_const "Person", Struct.new(:name, :age)
+        stub_const "PersonCopier", (Class.new(Copier) do
+          copies_attributes :name, :age
+        end)
 
-      mark_clone = PersonCopier.new(Person.new("Mark", 27)).copy!
-      mark_clone.to_a.should == ["Mark", 27]
+        mark_clone = PersonCopier.new(Person.new("Mark", 27)).copy!
+        mark_clone.to_a.should == ["Mark", 27]
+      end
     end
 
     describe ".copies_has_and_belongs_to_many" do
-      let(:project_class) { Struct.new(:name, :sexiness) }
-      let(:sexy_project_class) { Class.new(project_class) }
-      let(:boring_project_class) { Class.new(project_class) }
-      let(:person_class_with_habtm_projects) {
-        Struct.new(:projects) {
+      before do
+        stub_const "Project", Struct.new(:name, :sexiness) 
+        stub_const "SexyProject", Class.new(Project) 
+        stub_const "BoringProject", Class.new(Project)
+        stub_const "Person", Struct.new(:projects) {
           define_method :initialize do |projects = []|
             super(projects)
             self.projects = mock_has_many(Project).new(projects)
           end
         }
-      }
+      end
 
       it "shallowly copies a habtm relationship when :deep => false, or is unspecified" do
-        stub_const "Project", project_class
-        stub_const "Person", person_class_with_habtm_projects
-
         stub_const "PersonCopier", (Class.new(Copier) do
           copies_has_and_belongs_to_many :projects, :deep => false
         end)
@@ -131,9 +126,6 @@ module Kopipe
       end
 
       it "deeply copies a has_and_belongs_to_many relationship" do
-        stub_const "Project", project_class
-        stub_const "Person", person_class_with_habtm_projects
-
         stub_const "ProjectCopier", (Class.new(Copier) do
           copies_attributes :name
         end)
@@ -148,11 +140,6 @@ module Kopipe
       end
 
       it "deeply copies a polymorphic has_and_belongs_to_many relationship" do
-        stub_const "Project", project_class
-        stub_const "SexyProject", sexy_project_class
-        stub_const "BoringProject", boring_project_class
-        stub_const "Person", person_class_with_habtm_projects
-
         stub_const "BoringProjectCopier", (Class.new(Copier) do
           copies { target.sexiness = -1 }
         end)
@@ -178,11 +165,6 @@ module Kopipe
       end
 
       it "deeply copies a polymorphic has_and_belongs_to_many relationship under a namespace" do
-        stub_const "Project", project_class
-        stub_const "SexyProject", sexy_project_class
-        stub_const "BoringProject", boring_project_class
-        stub_const "Person", person_class_with_habtm_projects
-
         stub_const "PersonCopiers", Module.new
         stub_const "PersonCopiers::SexyProjectCopier", (Class.new(Copier) do
           copies { target.sexiness = 9999 }
@@ -277,7 +259,7 @@ module Kopipe
             :namespace => 'PersonCopiers'
         end)
 
-        person = Person.new([ SexyProject.new("RP 2.0") ])
+        person      = Person.new([ SexyProject.new("RP 2.0") ])
         person_copy = PersonCopier.new(person, target: Person.new([])).copy!
 
         person_copy.projects.first.tap do |first_copy|
