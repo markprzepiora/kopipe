@@ -66,10 +66,8 @@ module Kopipe
     it "can define custom copiers" do
       stub_const "Person", Struct.new(:name, :age)
       stub_const "PersonCopier", (Class.new(Copier) do
-        copies {
-          target.name = "Richard"
-          target.age  = 28
-        }
+        copies { target.name = "Richard" }
+        copies { target.age  = 28 }
       end)
 
       mark_clone = PersonCopier.new(Person.new("Mark", 27)).copy!
