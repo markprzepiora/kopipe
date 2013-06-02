@@ -11,10 +11,13 @@ module Kopipe
     class_attribute :copiers
     self.copiers = []
 
+    def self.add_copier(&block)
+      self.copiers += [block]
+    end
+
     include FieldCopiers::Attributes
     include FieldCopiers::Custom
     include FieldCopiers::BelongsTo
-    include FieldCopiers::HasMany
     include FieldCopiers::HasAndBelongsToMany
 
     def initialize(source, target: nil, db: CopierDatabase.new)
@@ -36,10 +39,6 @@ module Kopipe
 
     def self.and_saves
       add_copier{ target.save! }
-    end
-
-    def self.add_copier(&block)
-      self.copiers += [block]
     end
 
     private

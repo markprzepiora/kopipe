@@ -9,6 +9,8 @@ module Kopipe
         def copies_has_and_belongs_to_many(*options)
           add_copier { copy_has_and_belongs_to_many(*options) }
         end
+
+        alias_method :copies_has_many, :copies_has_and_belongs_to_many
       end
 
       def copy_has_and_belongs_to_many(name, options = {})
