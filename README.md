@@ -1,4 +1,4 @@
-kopipe
+kopipe [![Build Status](https://travis-ci.org/markprzepiora/kopipe.png?branch=master)](https://travis-ci.org/markprzepiora/kopipe)
 ======
 
 Kopipe (コピペ), pronounced as in (CopyPa)ste.
