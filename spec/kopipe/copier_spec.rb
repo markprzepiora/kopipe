@@ -51,12 +51,6 @@ module Kopipe
 
         PersonCopier.new(stub, target: target).target.should equal target
       end
-
-      it "alternatively accepts a block which yields the target" do
-        target = stub('target')
-
-        PersonCopier.new(stub('source')){ target }.target.should == target
-      end
     end
 
     describe ".copies" do
@@ -284,6 +278,7 @@ module Kopipe
       }
 
       it "shallowly copies belongs-to relationships" do
+        stub_const "Project", project_class
         stub_const "Person", person_class_with_belongs_to_project
         stub_const "PersonCopier", (Class.new(Copier) do
           copies_belongs_to :project, :deep => false
