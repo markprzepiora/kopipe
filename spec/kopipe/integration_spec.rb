@@ -1,8 +1,5 @@
 require 'spec_helper'
 
-module SomeModule
-end
-
 describe "A blog post" do
   with_model :User do
     table do |t|
@@ -59,6 +56,7 @@ describe "A blog post" do
       t.string   "name"
       t.string   "type"
       t.boolean  "completed"
+      t.integer  "suggested_by_id"
       t.integer  "author_id"
       t.integer  "project_id"
       t.datetime "created_at", :null => false
@@ -75,16 +73,108 @@ describe "A blog post" do
     end
   end
 
-  it "performs a shallow copy of todos" do
+  it "performs a shallow copy of a todo" do
     stub_const "TodoCopier", (Class.new(Kopipe::Copier) do
-      copies_attributes :name, :completed 
+      copies { target.name = "#{source.name} copy" }
+      copies_attributes :completed 
+      copies_belongs_to :author, :deep => false
       and_saves
     end)
 
-    todo      = Todo.create! name: "Get groceries", completed: true
+    user      = User.create! email: 'mark@example.com'
+    todo      = Todo.create! name: "Get groceries", completed: true, author: user
     todo_copy = TodoCopier.new(todo).copy!
 
-    todo_copy.name.should == "Get groceries"
+    todo_copy.name.should == "Get groceries copy"
     todo_copy.completed.should == true
+    todo_copy.author.should == user
   end
+
+  it "performs a deep copy of a project, testing various copying options" do
+    stub_const "ProjectCopier", (Class.new(Kopipe::Copier) do
+      copies_attributes :name
+      copies_belongs_to :owner,                   :deep => 'UserCopier'
+      copies_has_many :todos,                     :deep => 'TodoCopier'
+      copies_has_and_belongs_to_many :developers, :deep => false
+      and_saves
+    end)
+
+    stub_const "TodoCopier", (Class.new(Kopipe::Copier) do
+      copies_attributes :name, :completed
+      copies_belongs_to :author,  :deep => false
+      copies_belongs_to :project, :deep => false
+    end)
+
+    stub_const "UserCopier", (Class.new(Kopipe::Copier) do
+      copies { target.email = "example-user@example.com" }
+    end)
+
+    owner     = User.create! email: 'alice@example.com'
+    developer = User.create! email: 'bob@example.com'
+    project   = Project.create! name: "June 2013 Sprint", owner: owner, developers: [owner, developer]
+    todo_1    = Todo.create! project: project, name: "Rails work", :author => owner
+    todo_2    = Todo.create! project: project, name: "Ember work", :author => developer
+
+    project_copy = ProjectCopier.new(project).copy!
+    owner_copy   = project_copy.owner
+    todo_1_copy  = project_copy.todos.find_by_name 'Rails work'
+    todo_2_copy  = project_copy.todos.find_by_name 'Ember work'
+
+    # The copy should have been saved successfully
+    project_copy.should be_persisted
+
+    # The new owner of the project should be different from the original one
+    owner_copy.should be
+    owner_copy.id.should_not == owner.id
+    owner_copy.email.should == 'example-user@example.com'
+
+    # On the other hand, the developer should not have been copied, and should
+    # be included in the developers list along with the owner copy.
+    project_copy.developers.should =~ [owner_copy, developer]
+
+    # The todos of the project's copy should be different than those of the original
+    project_copy.todos.should_not =~ project.todos
+
+    # And they should both exist
+    todo_1_copy.should be
+    todo_2_copy.should be
+
+    # The author of the first todo should be the owner's copy
+    todo_1_copy.author.should == owner_copy
+
+    # The author of the second todo should be unchanged
+    todo_2_copy.author.should == developer
+  end
+
+  # it "performs a deep copy of a project, testing various copying options" do
+  #   # Create two subclasses of Todo to test copying of relations that involve
+  #   # the user of Single-Table Inheritance.
+  #   stub_const "Bug", Class.new(Todo)
+  #   stub_const "NewFeature", (Class.new(Todo) do
+  #     belongs_to :suggested_by, :class_name => 'User'
+  #   end)
+
+  #   stub_const "ProjectCopier", (Class.new(Kopipe::Copier) do
+  #     copies_attributes :name
+  #     copies_belongs_to :owner,                   :deep => 'UserCopier'
+  #     copies_has_many :todos,                     :deep => 'TodoCopier'
+  #     copies_has_and_belongs_to_many :developers, :deep => false
+  #     and_saves
+  #   end)
+
+  #   stub_const "TodoCopier", (Class.new(Kopipe::Copier) do
+  #     copies_attributes :name, :completed
+  #     copies_belongs_to :author,  :deep => false
+  #     copies_belongs_to :project, :deep => false
+  #   end)
+
+  #   stub_const "UserCopier", (Class.new(Kopipe::Copier) do
+  #     copies { target.email = "example-user@example.com" }
+  #   end)
+
+  #   owner     = User.create! email: 'alice@example.com'
+  #   developer = User.create! email: 'bob@example.com'
+  #   project   = Project.create! name: "June 2013 Sprint", owner: owner, developers: [owner, developer]
+  #   bug       = Bug.create! project: project, name: 
+  # end
 end
