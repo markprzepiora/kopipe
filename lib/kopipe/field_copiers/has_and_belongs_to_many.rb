@@ -19,7 +19,7 @@ module Kopipe
         namespace    = options[:namespace]
 
         source_has_many = source.send(name)
-        target_array    = []
+        target_array    = target.send(name)
 
         source_has_many.find_each do |source_child|
           target_array << deep_copy(source_child,
@@ -27,8 +27,6 @@ module Kopipe
                                     polymorphic: polymorphic,
                                     namespace: namespace)
         end
-
-        target.send(:"#{name}=", target_array)
       end
     end
   end
