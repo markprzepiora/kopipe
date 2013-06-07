@@ -146,35 +146,45 @@ describe "A blog post" do
     todo_2_copy.author.should == developer
   end
 
-  # it "performs a deep copy of a project, testing various copying options" do
-  #   # Create two subclasses of Todo to test copying of relations that involve
-  #   # the user of Single-Table Inheritance.
-  #   stub_const "Bug", Class.new(Todo)
-  #   stub_const "NewFeature", (Class.new(Todo) do
-  #     belongs_to :suggested_by, :class_name => 'User'
-  #   end)
+  it "performs a deep copy of a has-many relation with single-table inheritance" do
+    # Create two subclasses of Todo to test copying of relations that involve
+    # the user of Single-Table Inheritance.
+    stub_const "Bug", Class.new(Todo)
+    stub_const "NewFeature", (Class.new(Todo) do
+      belongs_to :suggested_by, :class_name => 'User'
+    end)
 
-  #   stub_const "ProjectCopier", (Class.new(Kopipe::Copier) do
-  #     copies_attributes :name
-  #     copies_belongs_to :owner,                   :deep => 'UserCopier'
-  #     copies_has_many :todos,                     :deep => 'TodoCopier'
-  #     copies_has_and_belongs_to_many :developers, :deep => false
-  #     and_saves
-  #   end)
+    stub_const "ProjectCopier", (Class.new(Kopipe::Copier) do
+      copies_has_many :todos, :polymorphic => true
+      and_saves
+    end)
 
-  #   stub_const "TodoCopier", (Class.new(Kopipe::Copier) do
-  #     copies_attributes :name, :completed
-  #     copies_belongs_to :author,  :deep => false
-  #     copies_belongs_to :project, :deep => false
-  #   end)
+    # The base TodoCopier copies the name and project of the todo
+    stub_const "TodoCopier", (Class.new(Kopipe::Copier) do
+      copies_attributes :name, :completed
+      copies_belongs_to :project, :deep => false
+    end)
 
-  #   stub_const "UserCopier", (Class.new(Kopipe::Copier) do
-  #     copies { target.email = "example-user@example.com" }
-  #   end)
+    stub_const "BugCopier", (Class.new(TodoCopier) do
+    end)
 
-  #   owner     = User.create! email: 'alice@example.com'
-  #   developer = User.create! email: 'bob@example.com'
-  #   project   = Project.create! name: "June 2013 Sprint", owner: owner, developers: [owner, developer]
-  #   bug       = Bug.create! project: project, name: 
-  # end
+    # The NewFeatureCopier also copies the suggested_by relation.
+    stub_const "NewFeatureCopier", (Class.new(TodoCopier) do
+      copies_belongs_to :suggested_by, :deep => false
+    end)
+
+    owner       = User.create! email: 'alice@example.com'
+    project     = Project.create! name: "June 2013 Sprint"
+    bug         = Bug.create! project: project, name: "Terrible bug"
+    new_feature = NewFeature.create! project: project, name: "A wonderful new feature", :suggested_by => owner
+
+    project_copy = ProjectCopier.new(project).copy!
+
+    bug_copy         = project_copy.todos.find_by_name 'Terrible bug'
+    new_feature_copy = project_copy.todos.find_by_name 'A wonderful new feature'
+
+    bug_copy.class.should == Bug
+    new_feature_copy.class.should == NewFeature
+    new_feature_copy.suggested_by.should == owner
+  end
 end
