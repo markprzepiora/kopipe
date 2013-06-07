@@ -55,13 +55,13 @@ todo      = Todo.find(1)
 todo_copy = TodoCopier.new(todo).copy!
 ```
 
-The student 
+The student shrugged, unimpressed.
 
 
 Deep copies
 -----------
 
-"My customer wants to clone one of her projects, together with its todos!"
+Later that day the student panicked. "My customer wants to clone one of her projects, together with its todos!"
 
 I got you covered, grasshopper.
 
