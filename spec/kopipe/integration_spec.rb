@@ -102,6 +102,7 @@ describe Kopipe::Copier do
       copies_attributes :name, :completed
       copies_belongs_to :author,  :deep => false
       copies_belongs_to :project, :deep => false
+      and_saves_without_validations
     end)
     stub_const "UserCopier", (Class.new(Kopipe::Copier) do
       copies { target.email = "example-user@example.com" }

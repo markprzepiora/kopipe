@@ -83,6 +83,23 @@ module Kopipe
       end
     end
 
+    describe ".and_saves_without_validations" do
+      it "saves the target object at a specific time, bypassing validations" do
+        stub_const "Person", Struct.new(:name, :age)
+        stub_const "PersonCopier", (Class.new(Copier) do
+          copies { target.name = "Richard" }
+          and_saves_without_validations
+          copies { target.age  = 28 }
+        end)
+
+        mark_clone = Person.new
+        mark_clone.should_receive(:save).with(validate: false) {
+          mark_clone.to_a.should == ["Richard", nil]
+        }
+        PersonCopier.new(Person.new("Mark", 27), target: mark_clone).copy!
+      end
+    end
+
     describe ".copies_attributes" do
       it "copies scalar attributes" do
         stub_const "Person", Struct.new(:name, :age)
