@@ -165,7 +165,7 @@ describe Kopipe::Copier do
     another_project_todo = Todo.create! project: another_project, name: "Ember work"
 
     project_copy = ProjectCopier.new(project, target: another_project).copy!
-    project_copy.todos.pluck(:name).should =~ ["Rails work", "Ember work"]
+    project_copy.todos.map(&:name).should =~ ["Rails work", "Ember work"]
   end
 
   it "performs a deep copy of a has-many relation with single-table inheritance" do
