@@ -3,7 +3,7 @@ kopipe [![Build Status](https://travis-ci.org/markprzepiora/kopipe.png?branch=ma
 
 Kopipe (コピペ), pronounced as in (CopyPa)ste.
 
-Dead simple ActiveRecord object copying for ActiveRecord 3.2+.
+Dead simple ActiveRecord object copying for ActiveRecord 3.1, 3.2 and 4.0.
 
 Kopipe is in version 0.0.1.alpha, so neither expect this README to be accurate nor for the interface not to change.
 
@@ -23,13 +23,13 @@ Or if you are still running Ruby 1.9,
 gem 'kopipe', github: 'markprzepiora/kopipe', branch: 'ruby1.9'
 ```
 
-and run ```bundle install```.
+and run `bundle install`.
 
 
 Shallow copies (grasshopper mode)
 ---------------------------------
 
-"Sensei, I can use [```ActiveRecord::Base#dup```](http://apidock.com/rails/ActiveRecord/Base/dup)!"
+"Sensei, I can use [`ActiveRecord::Base#dup`](http://apidock.com/rails/ActiveRecord/Base/dup)!"
 
 Instead, define a copier.
 
@@ -106,7 +106,7 @@ But that's not all
 
 ### Single-table inheritance #########
 
-"Sensei, I have many todos, but while some are a ```Todo```, others are a ```Bug < Todo```, or a ```Feature < Todo```."
+"Sensei, I have many todos, but while some are a `Todo`, others are a `Bug < Todo`, or a `Feature < Todo`."
 
 Worry not, I will not judge you.
 
@@ -129,3 +129,38 @@ module TodoCopiers
   end
 end
 ```
+
+
+To-Dos
+------
+
+### Faster copying ###################
+
+Depending on the number of validations/etc, Kopipe can be quite slow at copying
+large numbers of records, since it goes through ActiveRecord (which itself is
+slow at creating lots of records).
+
+How slow?
+
+```ruby
+require 'benchmark'
+
+project = Project.create
+500.times { project.todos.create }
+
+puts Benchmark.measure {
+  project_copier = ProjectCopier.new(project)
+  project_copy   = project_copier.copy!
+}
+# >>   4.540000   0.140000   4.680000 (  6.417537)
+```
+
+The technical term for this is "Ouch".
+
+We might try using
+[activerecord-import](https://github.com/zdennis/activerecord-import) to insert
+records instead, which promises to be much faster. This has a few challenges
+associated with it. (The leaves of the relationship chain would have to be
+copied first, and copying self-referential models would be tricky.)
+
+But, it has to be done!
