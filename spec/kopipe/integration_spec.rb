@@ -130,7 +130,7 @@ describe Kopipe::Copier do
 
     # On the other hand, the developer should not have been copied, and should
     # be included in the developers list along with the owner copy.
-    project_copy.developers.should =~ [owner_copy, developer]
+    project_copy.developers.to_a.should =~ [owner_copy, developer]
 
     # The todos of the project's copy should be different than those of the original.
     project_copy.todos.should_not =~ project.todos

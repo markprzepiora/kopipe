@@ -47,9 +47,9 @@ module Kopipe
       end
 
       it "accepts an optional target parameter which is set as the copy target" do
-        target = stub
+        target = double
 
-        PersonCopier.new(stub, target: target).target.should equal target
+        PersonCopier.new(double, target: target).target.should equal target
       end
     end
 
@@ -301,7 +301,7 @@ module Kopipe
           copies_belongs_to :project, :deep => false
         end)
 
-        project       = stub('project')
+        project       = double('project')
         source_person = Person.new(project)
 
         PersonCopier.new(source_person).copy!.project.should equal project
@@ -318,7 +318,7 @@ module Kopipe
           copies_belongs_to :project, :deep => ProjectCopier
         end)
 
-        source_project = stub(:name => "Mark's project")
+        source_project = double(:name => "Mark's project")
         source_person  = Person.new(source_project)
         source_person.stub(:build_project => Project.new)
 
@@ -340,7 +340,7 @@ module Kopipe
           copies_belongs_to :project, :deep => 'ProjectCopier'
         end)
 
-        source_project = stub(:name => "Mark's project")
+        source_project = double(:name => "Mark's project")
         source_person  = Person.new(source_project)
 
         ProjectCopier.should_receive(:new).once.and_call_original
