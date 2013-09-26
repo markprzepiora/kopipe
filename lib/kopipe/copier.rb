@@ -100,7 +100,7 @@ module Kopipe
       return nil if source.nil?
 
       if polymorphic
-        copier_class = get_polymorphic_copier_class(source, namespace)
+        copier_class = polymorphic_copier_class(source, namespace)
       else
         copier_class = get_constant(copier_class) { IdentityCopier }
       end
@@ -115,23 +115,27 @@ module Kopipe
       deep_copy(source, copier_class: IdentityCopier)
     end
 
-    def get_polymorphic_copier_class(source, namespace = nil)
+    def polymorphic_copier_class(source, namespace = nil)
       get_constant("#{source.class}Copier", namespace)
     end
 
-    def get_constant(const, namespace = nil)
-      if namespace
-        namespace = get_constant(namespace)
-      else
-        namespace = self.class.parent
-      end
+    def get_constant(const, namespace_or_string = nil)
+      namespace = evaluate_namespace(namespace_or_string)
 
-      if const.is_a? String
+      if const.is_a?(String)
         namespace.const_get(const)
       elsif const
         const
       else
         yield if block_given?
+      end
+    end
+
+    def evaluate_namespace(namespace_or_string)
+      if namespace_or_string
+        get_constant(namespace_or_string)
+      else
+        self.class.parent
       end
     end
   end
