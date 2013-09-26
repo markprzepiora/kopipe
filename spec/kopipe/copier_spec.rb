@@ -175,21 +175,42 @@ module Kopipe
         end
       end
 
-      it "deeply copies a polymorphic has_and_belongs_to_many relationship under a namespace" do
-        stub_const "PersonCopiers", Module.new
-        stub_const "PersonCopiers::SexyProjectCopier", (Class.new(Copier) do
-          copies { target.sexiness = 9999 }
-        end)
-        stub_const "PersonCopier", (Class.new(Copier) do
-          copies_has_and_belongs_to_many :projects, :polymorphic => true, :namespace => PersonCopiers
-        end)
+      describe "the namespace option" do
+        it "deeply copies a polymorphic has_and_belongs_to_many relationship using copiers defined in a module" do
+          stub_const "PersonCopiers", Module.new
+          stub_const "PersonCopiers::SexyProjectCopier", (Class.new(Copier) do
+            copies { target.sexiness = 9999 }
+          end)
+          stub_const "PersonCopier", (Class.new(Copier) do
+            copies_has_and_belongs_to_many :projects, :polymorphic => true, :namespace => PersonCopiers
+          end)
 
-        person = Person.new([ SexyProject.new("RP 2.0") ])
-        person_copy = PersonCopier.new(person).copy!
+          person = Person.new([ SexyProject.new("RP 2.0") ])
+          person_copy = PersonCopier.new(person).copy!
 
-        person_copy.projects.first.tap do |first_copy|
-          first_copy.class.should == SexyProject
-          first_copy.sexiness.should == 9999
+          person_copy.projects.first.tap do |first_copy|
+            first_copy.class.should == SexyProject
+            first_copy.sexiness.should == 9999
+          end
+        end
+
+        it "can be specified with a string" do
+          stub_const "MyModule", Module.new
+          stub_const "MyModule::PersonCopiers", Module.new
+          stub_const "MyModule::PersonCopiers::SexyProjectCopier", (Class.new(Copier) do
+            copies { target.sexiness = 9999 }
+          end)
+          stub_const "MyModule::PersonCopier", (Class.new(Copier) do
+            copies_has_and_belongs_to_many :projects, :polymorphic => true, :namespace => "PersonCopiers"
+          end)
+
+          person = Person.new([ SexyProject.new("RP 2.0") ])
+          person_copy = MyModule::PersonCopier.new(person).copy!
+
+          person_copy.projects.first.tap do |first_copy|
+            first_copy.class.should == SexyProject
+            first_copy.sexiness.should == 9999
+          end
         end
       end
     end
@@ -346,6 +367,28 @@ module Kopipe
         ProjectCopier.should_receive(:new).once.and_call_original
 
         target_person = PersonCopier.new(source_person).copy!
+        target_person.project.name.should == "Mark's project"
+        target_person.project.should_not equal source_project
+      end
+
+      it "allows the :deep parameter to be specified as a string, evaluted relative to the containing module" do
+        stub_const "Project", project_class
+        stub_const "Person", person_class_with_belongs_to_project
+
+        stub_const "MyModule", Module.new
+        stub_const "MyModule::ProjectCopier", (Class.new(Copier) do
+          copies_attributes :name
+        end)
+        stub_const "MyModule::PersonCopier", (Class.new(Copier) do
+          copies_belongs_to :project, :deep => 'ProjectCopier'
+        end)
+
+        source_project = double(:name => "Mark's project")
+        source_person  = Person.new(source_project)
+
+        MyModule::ProjectCopier.should_receive(:new).once.and_call_original
+
+        target_person = MyModule::PersonCopier.new(source_person).copy!
         target_person.project.name.should == "Mark's project"
         target_person.project.should_not equal source_project
       end

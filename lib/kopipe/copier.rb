@@ -1,4 +1,5 @@
 require 'active_support/core_ext/class'
+require 'active_support/core_ext/module'
 require 'kopipe/copier_database'
 require 'kopipe/field_copiers/all'
 
@@ -122,7 +123,7 @@ module Kopipe
       if namespace
         namespace = get_constant(namespace)
       else
-        namespace = Object
+        namespace = self.class.parent
       end
 
       if const.is_a? String
