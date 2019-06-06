@@ -3,7 +3,7 @@ kopipe [![Build Status](https://travis-ci.org/markprzepiora/kopipe.png?branch=ma
 
 Kopipe (コピペ), pronounced as in (CopyPa)ste.
 
-Dead simple ActiveRecord object copying for ActiveRecord 3.1, 3.2 and 4.0.
+Dead simple ActiveRecord object copying for ActiveRecord 4.0+ and Ruby 2.0+.
 
 Kopipe is in version 0.0.1.alpha, so neither expect this README to be accurate nor for the interface not to change.
 
@@ -11,16 +11,10 @@ Kopipe is in version 0.0.1.alpha, so neither expect this README to be accurate n
 Setup
 -----
 
-Add it to your Gemfile either with,
+Add it to your Gemfile with,
 
 ```ruby
 gem 'kopipe', github: 'markprzepiora/kopipe'
-```
-
-Or if you are still running Ruby 1.9,
-
-```ruby
-gem 'kopipe', github: 'markprzepiora/kopipe', branch: 'ruby1.9'
 ```
 
 and run `bundle install`.
