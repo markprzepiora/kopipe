@@ -1,5 +1,5 @@
-require 'active_support/core_ext/class'
-require 'active_support/core_ext/module'
+require 'active_support'
+require 'active_support/all'
 require 'kopipe/copier_database'
 require 'kopipe/field_copiers/all'
 
