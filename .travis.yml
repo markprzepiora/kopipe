@@ -13,3 +13,4 @@ matrix:
       gemfile: Gemfile-activerecord-5.2.x
     - rvm: "2.6"
       gemfile: Gemfile-activerecord-5.2.x
+script: bundle exec rspec --format=documentation --color
