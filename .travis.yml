@@ -1,7 +1,16 @@
 language: ruby
 rvm:
-  - "2.0.0"
-gemfiles:
+  - "2.0"
+  - "2.6"
+gemfile:
   - Gemfile-activerecord-3.1.x
   - Gemfile-activerecord-3.2.x
   - Gemfile-activerecord-4.0.x
+  - Gemfile-activerecord-5.0.x
+  - Gemfile-activerecord-5.2.x
+matrix:
+  exclude:
+    - rvm: "2.0"
+      gemfile: Gemfile-activerecord-5.0.x
+    - rvm: "2.0"
+      gemfile: Gemfile-activerecord-5.2.x
